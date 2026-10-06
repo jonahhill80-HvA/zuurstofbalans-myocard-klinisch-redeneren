@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hemodynamisch sturen – interactieve oxygen delivery</title>
+<style>
+:root{
+  --bg:#f4f6f8;
+  --card:#ffffff;
+  --text:#17202a;
+  --muted:#5f6b76;
+  --line:#cfd7de;
+  --accent:#123a78;
+  --accent2:#0d6b68;
+  --good:#1f7a4d;
+  --warn:#a66a00;
+  --bad:#a63a3a;
+  --soft:#eef3f8;
+  --soft2:#edf7f6;
+  --radius:16px;
+  --shadow:0 10px 28px rgba(20,32,45,.08);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.wrap{max-width:1240px;margin:auto}
+header{
+  background:linear-gradient(135deg,#152766,#0d6b68);
+  color:white;
+  padding:36px 20px 30px;
+}
+header h1{margin:.25rem 0 .6rem;font-size:clamp(2rem,4.5vw,3.6rem);line-height:1.05}
+header p{max-width:860px;margin:0;opacity:.95}
+.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.78rem;font-weight:800;opacity:.85}
+nav{
+  position:sticky;top:0;z-index:20;background:rgba(255,255,255,.96);
+  border-bottom:1px solid var(--line);backdrop-filter:blur(8px)
+}
+.navrow{display:flex;gap:8px;overflow:auto;padding:10px 18px}
+.navrow a{
+  white-space:nowrap;text-decoration:none;color:var(--text);
+  padding:8px 11px;border-radius:999px
+}
+.navrow a:hover,.navrow a:focus{background:#edf2f7}
+main{padding:24px 18px 64px}
+section{max-width:1240px;margin:0 auto 24px;scroll-margin-top:74px}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:20px
+}
+.grid{display:grid;gap:16px}
+.grid.two{grid-template-columns:1.15fr .85fr}
+.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:900px){.grid.two,.grid.three{grid-template-columns:1fr}}
+h2{margin:.15rem 0 1rem;font-size:1.6rem}
+h3{margin:.2rem 0 .65rem}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+.pill{
+  display:inline-block;padding:5px 10px;border-radius:999px;background:#e9f1f8;
+  color:#244a72;font-weight:800;font-size:.82rem
+}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 18px}
+.tab{
+  border:1px solid #b9c7d3;background:white;color:var(--text);
+  padding:9px 13px;border-radius:999px;font-weight:700
+}
+.tab.active{background:var(--accent);color:white;border-color:var(--accent)}
+.panel{display:none}.panel.active{display:block}
+.kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{border:1px solid var(--line);background:#fbfcfd;border-radius:12px;padding:12px}
+.kpi .label{font-size:.78rem;color:var(--muted)}
+.kpi strong{display:block;font-size:1.35rem;margin-top:2px}
+.kpi.good strong{color:var(--good)}
+.kpi.warn strong{color:var(--warn)}
+.kpi.bad strong{color:var(--bad)}
+.interventions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media(max-width:850px){.interventions{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.interventions{grid-template-columns:1fr}}
+.control{
+  border:1px solid var(--line);border-radius:14px;background:#fbfcfd;padding:14px
+}
+.control label{font-weight:800;display:block;margin-bottom:8px}
+.control input[type=range]{width:100%;accent-color:var(--accent2)}
+.control .value{display:flex;justify-content:space-between;color:var(--muted);font-size:.9rem;margin-top:6px}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.btn{
+  border:0;border-radius:10px;padding:10px 14px;background:var(--accent);color:white;font-weight:800
+}
+.btn.secondary{background:#e8eef5;color:var(--text);border:1px solid #c6d1db}
+.btn.good{background:var(--accent2)}
+.notice{
+  border-left:4px solid var(--accent2);background:#f0f8f7;padding:12px 14px;border-radius:10px
+}
+.warning{
+  border-left:4px solid var(--warn);background:#fff8e9;padding:12px 14px;border-radius:10px
+}
+svg{width:100%;height:auto;display:block}
+.node rect{fill:#f1f3f5;stroke:#aeb7c1;stroke-width:1.6}
+.node text{font-size:17px;fill:#18245e;font-weight:700;text-anchor:middle;dominant-baseline:middle}
+.node.sub rect{fill:#fafbfc;stroke-dasharray:4 3}
+.node.intervention rect{fill:#f6f7f8}
+.link{fill:none;stroke:#b4b9bf;stroke-width:5}
+.link.active{stroke:#0d6b68;stroke-width:7}
+.node.active rect{fill:#dff3f0;stroke:#0d6b68;stroke-width:3}
+.node.risk rect{fill:#fff0e8;stroke:#b76418;stroke-width:3}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:.9rem}
+.legend span::before{content:"";display:inline-block;width:13px;height:13px;border-radius:3px;margin-right:6px;vertical-align:-2px;background:#f1f3f5;border:1px solid #aeb7c1}
+.legend .changed::before{background:#dff3f0;border-color:#0d6b68}
+.legend .risk::before{background:#fff0e8;border-color:#b76418}
+.chain{
+  display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px;
+  border:1px solid var(--line);border-radius:12px;background:#fbfcfd;margin-top:12px
+}
+.chain .box{padding:8px 10px;border-radius:9px;background:white;border:1px solid #c8d2db;font-weight:700}
+.chain .arrow{font-weight:900;color:var(--accent2)}
+.scenarioCard{border:1px solid var(--line);border-radius:14px;background:#fbfcfd;padding:15px}
+.vitals{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
+@media(max-width:640px){.vitals{grid-template-columns:repeat(2,1fr)}}
+.vital{border:1px solid var(--line);border-radius:10px;background:white;padding:10px}
+.vital span{display:block;color:var(--muted);font-size:.78rem}
+.vital b{font-size:1.08rem}
+.question{margin-top:16px;border-top:1px solid var(--line);padding-top:16px}
+.options{display:grid;gap:8px}
+.opt{
+  width:100%;text-align:left;border:1px solid #c5d0d9;background:white;border-radius:10px;padding:10px 12px
+}
+.opt.selected{border-color:var(--accent2);background:#edf8f6}
+.feedback{display:none;margin-top:10px;padding:12px;border-radius:10px}
+.feedback.show{display:block}
+.feedback.good{background:#edf8f2;color:#165d3b}
+.feedback.bad{background:#fff0f0;color:#842323}
+.scorebar{height:16px;background:#e7edf1;border-radius:999px;overflow:hidden;margin:8px 0 6px}
+.scorebar div{height:100%;width:50%;background:linear-gradient(90deg,#a63a3a,#c18a11,#1f7a4d);transition:width .25s}
+#predictionGate{margin-top:12px}
+.hidden{display:none!important}
+footer{max-width:1240px;margin:auto;padding:0 18px 44px;color:var(--muted)}
+:focus-visible{outline:3px solid #ffbf47;outline-offset:2px}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="eyebrow">Interactieve fysiologie • AM / klinisch redeneren</div>
+    <h1>Hemodynamisch sturen</h1>
+    <p>Onderzoek hoe volume, vasopressoren, inotropica en bloedtransfusie via preload, afterload, contractiliteit en arteriële zuurstofinhoud de oxygen delivery naar de weefsels beïnvloeden.</p>
+  </div>
+</header>
+
+<nav aria-label="Navigatie">
+  <div class="wrap navrow">
+    <a href="#model">Model</a>
+    <a href="#experiment">Vrij experimenteren</a>
+    <a href="#predict">Voorspel eerst</a>
+    <a href="#scenarios">Scenario's</a>
+    <a href="#uitleg">Uitleg model</a>
+  </div>
+</nav>
+
+<main>
+<section id="model">
+  <div class="card">
+    <span class="pill">Centrale kapstok</span>
+    <h2>Van interventie naar oxygen delivery</h2>
+    <p class="muted">Het schema is gebaseerd op het aangeleverde hemodynamische overzicht. De interactieve versie maakt de causale keten zichtbaar. Gekleurde blokken en verbindingen tonen welke route je op dit moment beïnvloedt.</p>
+
+    <svg id="hemoSvg" viewBox="0 0 1200 650" role="img" aria-label="Hemodynamisch schema van oxygen delivery en oxygen consumption">
+      <path id="l-global-delivery" class="link" d="M600 72 L600 112 L350 112 L350 145"/>
+      <path id="l-global-consumption" class="link" d="M600 72 L600 112 L875 112 L875 145"/>
+      <path id="l-delivery-co" class="link" d="M350 190 L350 230"/>
+      <path id="l-delivery-cao2" class="link" d="M350 190 L350 215 L780 215 L780 230"/>
+      <path id="l-co-sv" class="link" d="M350 275 L350 310 L245 310 L245 345"/>
+      <path id="l-co-hr" class="link" d="M350 275 L350 310 L470 310 L470 345"/>
+      <path id="l-cao2-oxy" class="link" d="M780 275 L780 310 L700 310 L700 345"/>
+      <path id="l-cao2-hb" class="link" d="M780 275 L780 310 L900 310 L900 345"/>
+      <path id="l-sv-preload" class="link" d="M245 390 L245 425 L180 425 L180 460"/>
+      <path id="l-sv-afterload" class="link" d="M245 390 L245 425 L360 425 L360 460"/>
+      <path id="l-sv-contract" class="link" d="M245 390 L245 425 L540 425 L540 460"/>
+      <path id="l-preload-volume" class="link" d="M180 505 L180 555"/>
+      <path id="l-afterload-vaso" class="link" d="M360 505 L360 555"/>
+      <path id="l-contract-inotrope" class="link" d="M540 505 L540 555"/>
+      <path id="l-hb-blood" class="link" d="M900 390 L900 555"/>
+
+      <g id="n-global" class="node"><rect x="500" y="28" width="200" height="44" rx="10"/><text x="600" y="50">Global oxygenation</text></g>
+      <g id="n-delivery" class="node"><rect x="260" y="145" width="180" height="45" rx="10"/><text x="350" y="168">Oxygen delivery</text></g>
+      <g id="n-consumption" class="node"><rect x="775" y="145" width="200" height="45" rx="10"/><text x="875" y="168">Oxygen consumption</text></g>
+      <g id="n-co" class="node"><rect x="270" y="230" width="160" height="45" rx="10"/><text x="350" y="252">Cardiac output</text></g>
+      <g id="n-cao2" class="node sub"><rect x="680" y="230" width="200" height="45" rx="10"/><text x="780" y="252">Arterial O₂ content</text></g>
+      <g id="n-sv" class="node"><rect x="155" y="345" width="180" height="45" rx="10"/><text x="245" y="367">Stroke volume</text></g>
+      <g id="n-hr" class="node"><rect x="390" y="345" width="160" height="45" rx="10"/><text x="470" y="367">Heart rate</text></g>
+      <g id="n-oxy" class="node sub"><rect x="615" y="345" width="170" height="45" rx="10"/><text x="700" y="367">Oxygenation</text></g>
+      <g id="n-hb" class="node sub"><rect x="820" y="345" width="160" height="45" rx="10"/><text x="900" y="367">Haemoglobin</text></g>
+      <g id="n-preload" class="node"><rect x="115" y="460" width="130" height="45" rx="10"/><text x="180" y="482">Preload</text></g>
+      <g id="n-afterload" class="node"><rect x="290" y="460" width="140" height="45" rx="10"/><text x="360" y="482">Afterload</text></g>
+      <g id="n-contract" class="node"><rect x="465" y="460" width="150" height="45" rx="10"/><text x="540" y="482">Contractility</text></g>
+      <g id="n-volume" class="node intervention"><rect x="95" y="555" width="170" height="48" rx="24"/><text x="180" y="579">Volume</text></g>
+      <g id="n-vaso" class="node intervention"><rect x="275" y="555" width="170" height="48" rx="24"/><text x="360" y="579">Vasopressor</text></g>
+      <g id="n-inotrope" class="node intervention"><rect x="455" y="555" width="170" height="48" rx="24"/><text x="540" y="579">Inotrope</text></g>
+      <g id="n-blood" class="node intervention"><rect x="800" y="555" width="200" height="48" rx="24"/><text x="900" y="579">Blood transfusion</text></g>
+    </svg>
+    <div class="legend"><span>Neutraal</span><span class="changed">Beïnvloede route</span><span class="risk">Risico / keerzijde</span></div>
+  </div>
+</section>
+
+<section id="experiment">
+  <div class="card">
+    <span class="pill">Modus 1</span>
+    <h2>Vrij experimenteren</h2>
+    <div class="grid two">
+      <div>
+        <div class="interventions" id="interventions"></div>
+        <div class="btnrow">
+          <button class="btn secondary" id="resetFree">Reset naar uitgangssituatie</button>
+        </div>
+        <div id="mechanismText" class="notice" style="margin-top:14px"></div>
+      </div>
+      <div>
+        <h3>Direct effect</h3>
+        <div class="kpis" id="kpis"></div>
+        <div style="margin-top:14px">
+          <div><b>Oxygen delivery ten opzichte van uitgangssituatie</b></div>
+          <div class="scorebar"><div id="do2bar"></div></div>
+          <div id="balanceText" class="small muted"></div>
+        </div>
+        <div id="riskBox" class="warning hidden" style="margin-top:14px"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="predict">
+  <div class="card">
+    <span class="pill">Modus 2</span>
+    <h2>Voorspel eerst, draai daarna</h2>
+    <div id="predictionQuestion"></div>
+    <div id="predictionGate" class="hidden">
+      <p class="muted">Je voorspelling is vastgelegd. Gebruik nu de betreffende interventie in het experiment hierboven en vergelijk je verwachting met het resultaat.</p>
+      <button class="btn good" id="newPrediction">Nieuwe voorspelling</button>
+    </div>
+  </div>
+</section>
+
+<section id="scenarios">
+  <div class="card">
+    <span class="pill">Modus 3</span>
+    <h2>Klinische scenario's</h2>
+    <p class="muted">Het doel is niet één “juiste knop” onthouden, maar eerst bepalen welk fysiologisch probleem de oxygen delivery beperkt.</p>
+    <div class="tabs" id="scenarioTabs"></div>
+    <div id="scenarioPanel"></div>
+  </div>
+</section>
+
+<section id="uitleg">
+  <div class="card">
+    <span class="pill">Achtergrond</span>
+    <h2>Hoe de rekensimulatie is bedoeld</h2>
+    <div class="grid three">
+      <div>
+        <h3>1. Cardiac output</h3>
+        <p><b>CO = HR × SV.</b> Het slagvolume wordt in deze simulatie vereenvoudigd beïnvloed door preload, afterload en contractiliteit.</p>
+      </div>
+      <div>
+        <h3>2. Arteriële O₂-inhoud</h3>
+        <p>De pagina gebruikt een <b>relatieve index</b> op basis van Hb en saturatie. Het is bewust geen klinische CaO₂-berekening in absolute eenheden.</p>
+      </div>
+      <div>
+        <h3>3. Oxygen delivery</h3>
+        <p><b>DO₂ ∝ CO × arteriële O₂-inhoud.</b> Het model laat vooral de richting en samenhang van veranderingen zien.</p>
+      </div>
+    </div>
+    <div class="warning" style="margin-top:14px">
+      <b>Didactisch model.</b> De pagina simuleert mechanismen en relatieve effecten. Zij geeft geen doseringsadvies en mag niet worden gebruikt voor patiëntenzorg.
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <p>Standalone HTML • vanilla JavaScript • geen externe libraries • geschikt voor lokaal gebruik en GitHub Pages.</p>
+</footer>
+
+<script>
+const APP = {
+  baseline: {
+    hr: 75, sv: 70, preload: 100, afterload: 100, contractility: 100,
+    hb: 8.5, sat: 0.98, vo2: 100, preloadResponsiveness: 1, name: "Gezonde uitgangssituatie"
+  },
+  controls: [
+    {id:"volume", label:"Volume", min:0, max:4, step:1, value:0, low:"geen", high:"hoog"},
+    {id:"vaso", label:"Vasopressor", min:0, max:4, step:1, value:0, low:"geen", high:"hoog"},
+    {id:"ino", label:"Inotropie", min:0, max:4, step:1, value:0, low:"geen", high:"hoog"},
+    {id:"blood", label:"Bloedtransfusie", min:0, max:4, step:1, value:0, low:"geen", high:"hoog"}
+  ],
+  predictions: [
+    {q:"Wat verwacht je primair wanneer je een vasopressor verhoogt?", options:[
+      "Afterload en perfusiedruk nemen toe; te veel kan het slagvolume beperken.",
+      "Hb stijgt direct.",
+      "Preload stijgt altijd sterk zonder verandering van afterload."
+    ], correct:0, target:"vaso"},
+    {q:"Wat verwacht je primair wanneer je inotropie verhoogt?", options:[
+      "Contractiliteit stijgt en het slagvolume kan toenemen.",
+      "Afterload daalt altijd.",
+      "Arteriële zuurstofinhoud stijgt rechtstreeks."
+    ], correct:0, target:"ino"},
+    {q:"Wat verwacht je primair van bloedtransfusie in dit model?", options:[
+      "Cardiac output stijgt altijd fors.",
+      "De Hb-component van de arteriële zuurstofinhoud neemt toe.",
+      "De hartfrequentie wordt rechtstreeks verlaagd."
+    ], correct:1, target:"blood"},
+    {q:"Wat kan gebeuren bij steeds meer volume wanneer de preload al hoog is?", options:[
+      "Het slagvolume blijft onbeperkt lineair stijgen.",
+      "Het effect op slagvolume vlakt af en het risico op pulmonale stuwing neemt toe.",
+      "Het Hb neemt af tot nul."
+    ], correct:1, target:"volume"}
+  ],
+  scenarios: [
+    {
+      id:"vasodilatie",
+      title:"Na inductie: vasodilatatie",
+      text:"Na inductie daalt de bloeddruk sterk. De patiënt is warm perifeer, oxygenatie en Hb zijn goed. Er zijn geen aanwijzingen voor bloedverlies.",
+      vitals:[["RR","72/38"],["HF","92/min"],["SpO₂","99%"],["Hb","8,6 mmol/L"]],
+      base:{hr:92,sv:58,preload:88,afterload:70,contractility:95,hb:8.6,sat:.99,vo2:95,preloadResponsiveness:.7},
+      best:"vaso",
+      explanation:"Het dominante probleem is een lage vaattonus. Een vasopressor grijpt daarom directer aan op de afterload/perfusiedruk dan extra volume."
+    },
+    {
+      id:"hypovolemie",
+      title:"Bloedverlies: preload tekort",
+      text:"Er is peroperatief relevant bloedverlies. De patiënt is bleek, tachycard, met lage bloeddruk en lage vulling.",
+      vitals:[["RR","82/48"],["HF","118/min"],["SpO₂","98%"],["Hb","7,0 mmol/L"]],
+      base:{hr:118,sv:42,preload:60,afterload:95,contractility:105,hb:7.0,sat:.98,vo2:115,preloadResponsiveness:1.25},
+      best:"volume",
+      explanation:"In dit vereenvoudigde scenario is de lage preload het primaire mechanisme. Volume verhoogt de vulling en daarmee het slagvolume, zolang de patiënt preload-responsive is."
+    },
+    {
+      id:"contractiliteit",
+      title:"Verminderde pompfunctie",
+      text:"De bloeddruk is laag, de preload is niet duidelijk laag en er zijn aanwijzingen voor verminderde contractiliteit.",
+      vitals:[["RR","86/52"],["HF","96/min"],["SpO₂","97%"],["Hb","8,4 mmol/L"]],
+      base:{hr:96,sv:45,preload:105,afterload:100,contractility:65,hb:8.4,sat:.97,vo2:100,preloadResponsiveness:.35},
+      best:"ino",
+      explanation:"Wanneer de contractiliteit het dominante probleem is, kan inotropie het slagvolume en daarmee de cardiac output verhogen. De myocardiale zuurstofbehoefte kan daarbij wel toenemen."
+    },
+    {
+      id:"anemie",
+      title:"Anemie: zuurstofinhoud tekort",
+      text:"De hemodynamiek is relatief stabiel en de saturatie is goed, maar het Hb is duidelijk verlaagd.",
+      vitals:[["RR","108/64"],["HF","88/min"],["SpO₂","99%"],["Hb","4,8 mmol/L"]],
+      base:{hr:88,sv:68,preload:100,afterload:100,contractility:100,hb:4.8,sat:.99,vo2:100,preloadResponsiveness:.9},
+      best:"blood",
+      explanation:"Hier ligt de beperking aan de rechterkant van het schema: de Hb-component van de arteriële zuurstofinhoud is laag."
+    }
+  ]
+};
+
+let currentBase = {...APP.baseline};
+let state = {volume:0, vaso:0, ino:0, blood:0};
+let activeScenario = null;
+
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>[...r.querySelectorAll(s)];
+
+function clamp(v,min,max){return Math.max(min,Math.min(max,v))}
+function derive(base,state){
+  const preload = base.preload + state.volume*10;
+  const afterload = base.afterload + state.vaso*10;
+  const contractility = base.contractility + state.ino*10;
+  const hb = base.hb + state.blood*0.6;
+
+  const preloadGain = 1 + ((preload-base.preload)/100)*base.preloadResponsiveness;
+  const afterloadPenalty = 1 - Math.max(0, afterload-100)*0.0028;
+  const contractGain = 1 + Math.max(0, contractility-base.contractility)*0.006;
+  const overfillPenalty = preload>125 ? 1-(preload-125)*0.005 : 1;
+
+  let sv = base.sv * preloadGain * afterloadPenalty * contractGain * overfillPenalty;
+  sv = clamp(sv,25,120);
+
+  let hr = base.hr;
+  if(state.vaso>0) hr -= state.vaso*1.5;
+  hr = clamp(hr,40,150);
+
+  const co = hr*sv/1000;
+  const o2Index = hb*base.sat;
+  const do2 = co*o2Index;
+
+  const baseCO = base.hr*base.sv/1000;
+  const baseO2 = base.hb*base.sat;
+  const baseDO2 = baseCO*baseO2;
+  const relDO2 = do2/baseDO2*100;
+
+  const pulmonaryRisk = Math.max(0,(preload-115) + Math.max(0,85-contractility)*0.6);
+  const myocardialDemand = (hr/base.hr)*0.45 + (afterload/base.afterload)*0.3 + (contractility/base.contractility)*0.25;
+
+  return {preload,afterload,contractility,hb,sv,hr,co,o2Index,do2,relDO2,pulmonaryRisk,myocardialDemand};
+}
+
+function renderControls(){
+  const host=$("#interventions"); host.innerHTML="";
+  APP.controls.forEach(c=>{
+    host.insertAdjacentHTML("beforeend",`
+      <div class="control">
+        <label for="${c.id}">${c.label}</label>
+        <input id="${c.id}" type="range" min="${c.min}" max="${c.max}" step="${c.step}" value="${state[c.id]}">
+        <div class="value"><span>${c.low}</span><b id="${c.id}Val">${state[c.id]}/4</b><span>${c.high}</span></div>
+      </div>`);
+    $("#"+c.id).addEventListener("input",e=>{
+      state[c.id]=+e.target.value;
+      $("#"+c.id+"Val").textContent=e.target.value+"/4";
+      update();
+    });
+  });
+}
+
+function setClasses(ids,kind="active"){
+  ids.forEach(id=>{const el=$("#"+id); if(el) el.classList.add(kind);});
+}
+function clearDiagram(){
+  $$(".node").forEach(n=>n.classList.remove("active","risk"));
+  $$(".link").forEach(l=>l.classList.remove("active"));
+}
+function updateDiagram(d){
+  clearDiagram();
+  if(state.volume>0){
+    setClasses(["n-volume","n-preload","n-sv","n-co","n-delivery","n-global"]);
+    setClasses(["l-preload-volume","l-sv-preload","l-co-sv","l-delivery-co","l-global-delivery"]);
+  }
+  if(state.vaso>0){
+    setClasses(["n-vaso","n-afterload","n-sv","n-co","n-delivery","n-global"]);
+    setClasses(["l-afterload-vaso","l-sv-afterload","l-co-sv","l-delivery-co","l-global-delivery"]);
+  }
+  if(state.ino>0){
+    setClasses(["n-inotrope","n-contract","n-sv","n-co","n-delivery","n-global"]);
+    setClasses(["l-contract-inotrope","l-sv-contract","l-co-sv","l-delivery-co","l-global-delivery"]);
+  }
+  if(state.blood>0){
+    setClasses(["n-blood","n-hb","n-cao2","n-delivery","n-global"]);
+    setClasses(["l-hb-blood","l-cao2-hb","l-delivery-cao2","l-global-delivery"]);
+  }
+  if(d.pulmonaryRisk>12) setClasses(["n-preload"],"risk");
+  if(state.vaso>=3) setClasses(["n-afterload"],"risk");
+  if(state.ino>=3) setClasses(["n-contract"],"risk");
+}
+
+function mechanismText(d){
+  const parts=[];
+  if(state.volume>0){
+    parts.push(`Volume verhoogt de preload. Daardoor kan het slagvolume stijgen${d.pulmonaryRisk>12?", maar bij hoge preload neemt het risico op pulmonale stuwing toe":" zolang de patiënt preload-responsive is"}.`);
+  }
+  if(state.vaso>0){
+    parts.push(`Vasopressor verhoogt de vaattonus/afterload en ondersteunt de perfusiedruk. Bij hoge afterload kan het slagvolume juist worden geremd.`);
+  }
+  if(state.ino>0){
+    parts.push(`Inotropie verhoogt de contractiliteit en kan het slagvolume en de cardiac output verhogen. De myocardiale zuurstofbehoefte kan tegelijk toenemen.`);
+  }
+  if(state.blood>0){
+    parts.push(`Bloedtransfusie verhoogt in dit model het Hb en daarmee de arteriële zuurstofinhoud; cardiac output hoeft daarbij niet te veranderen.`);
+  }
+  return parts.length?parts.join(" "):"Draai aan één van de vier interventies. Het schema laat zien via welke fysiologische route de oxygen delivery verandert.";
+}
+
+function kpiClass(value, thresholds){
+  if(value<thresholds[0]) return "bad";
+  if(value<thresholds[1]) return "warn";
+  return "good";
+}
+
+function update(){
+  const d=derive(currentBase,state);
+  const host=$("#kpis");
+  host.innerHTML = `
+    <div class="kpi"><div class="label">Preload</div><strong>${Math.round(d.preload)}%</strong></div>
+    <div class="kpi"><div class="label">Afterload</div><strong>${Math.round(d.afterload)}%</strong></div>
+    <div class="kpi"><div class="label">Contractiliteit</div><strong>${Math.round(d.contractility)}%</strong></div>
+    <div class="kpi ${kpiClass(d.co,[3.5,4.5])}"><div class="label">Cardiac output</div><strong>${d.co.toFixed(1)} L/min</strong></div>
+    <div class="kpi ${kpiClass(d.relDO2,[80,95])}"><div class="label">O₂ delivery</div><strong>${Math.round(d.relDO2)}%</strong></div>
+    <div class="kpi"><div class="label">Slagvolume</div><strong>${Math.round(d.sv)} mL</strong></div>
+    <div class="kpi"><div class="label">Hartfrequentie</div><strong>${Math.round(d.hr)}/min</strong></div>
+    <div class="kpi"><div class="label">Hb</div><strong>${d.hb.toFixed(1)} mmol/L</strong></div>
+    <div class="kpi"><div class="label">SpO₂</div><strong>${Math.round(currentBase.sat*100)}%</strong></div>
+    <div class="kpi"><div class="label">Myocardiale vraag</div><strong>${Math.round(d.myocardialDemand*100)}%</strong></div>
+  `;
+  const width=clamp((d.relDO2-50)/1.2,0,100);
+  $("#do2bar").style.width=width+"%";
+  $("#balanceText").textContent=`Oxygen delivery: ${Math.round(d.relDO2)}% van de uitgangssituatie van deze patiënt.`;
+  $("#mechanismText").textContent=mechanismText(d);
+  const risk=[];
+  if(d.pulmonaryRisk>12) risk.push("Hoge preload: effect op slagvolume vlakt af en kans op pulmonale stuwing neemt toe.");
+  if(state.vaso>=3) risk.push("Hoge vasopressorstand: afterload stijgt sterk en kan het slagvolume beperken.");
+  if(state.ino>=3) risk.push("Hoge inotropie: contractiliteit stijgt, maar ook de myocardiale zuurstofbehoefte neemt toe.");
+  $("#riskBox").classList.toggle("hidden",risk.length===0);
+  $("#riskBox").innerHTML=risk.length?`<b>Keerzijde:</b> ${risk.join(" ")}`:"";
+  updateDiagram(d);
+}
+
+function resetState(){
+  state={volume:0,vaso:0,ino:0,blood:0};
+  APP.controls.forEach(c=>{
+    const el=$("#"+c.id); if(el){el.value=0; $("#"+c.id+"Val").textContent="0/4";}
+  });
+  update();
+}
+$("#resetFree").addEventListener("click",resetState);
+
+let predIndex=0;
+function renderPrediction(){
+  const p=APP.predictions[predIndex];
+  $("#predictionGate").classList.add("hidden");
+  $("#predictionQuestion").innerHTML=`<h3>${p.q}</h3><div class="options" id="predOpts"></div><div class="feedback" id="predFb"></div>`;
+  p.options.forEach((o,i)=>{
+    const b=document.createElement("button"); b.className="opt"; b.textContent=o;
+    b.addEventListener("click",()=>{
+      $$(".opt",$("#predOpts")).forEach(x=>x.classList.remove("selected")); b.classList.add("selected");
+      const fb=$("#predFb"); fb.className="feedback show "+(i===p.correct?"good":"bad");
+      fb.textContent=(i===p.correct?"Goed voorspeld. ":"Nog niet. ")+
+        (p.target==="vaso"?"Een vasopressor grijpt primair aan op de vaattonus/afterload.":p.target==="ino"?"Inotropie grijpt primair aan op contractiliteit.":p.target==="blood"?"Transfusie grijpt in dit model primair aan op Hb en arteriële O₂-inhoud.":"Bij hoge preload is de Frank-Starling-respons niet onbeperkt.");
+      $("#predictionGate").classList.remove("hidden");
+    });
+    $("#predOpts").appendChild(b);
+  });
+}
+$("#newPrediction").addEventListener("click",()=>{
+  predIndex=(predIndex+1)%APP.predictions.length; renderPrediction();
+});
+renderPrediction();
+
+function renderScenarioTabs(){
+  const host=$("#scenarioTabs"); host.innerHTML="";
+  APP.scenarios.forEach((s,i)=>{
+    const b=document.createElement("button"); b.className="tab"+(i===0?" active":""); b.textContent=s.title;
+    b.addEventListener("click",()=>{
+      $$(".tab",host).forEach(x=>x.classList.remove("active"));b.classList.add("active");renderScenario(s);
+    });
+    host.appendChild(b);
+  });
+}
+function renderScenario(s){
+  activeScenario=s;
+  currentBase={...s.base};
+  resetState();
+  $("#scenarioPanel").innerHTML=`
+    <div class="scenarioCard">
+      <h3>${s.title}</h3>
+      <p>${s.text}</p>
+      <div class="vitals">${s.vitals.map(v=>`<div class="vital"><span>${v[0]}</span><b>${v[1]}</b></div>`).join("")}</div>
+      <div class="question">
+        <h3>Welke interventieroute past primair bij het dominante probleem?</h3>
+        <div class="options" id="scenarioOpts">
+          ${[
+            ["volume","Volume / preload"],
+            ["vaso","Vasopressor / afterload-perfusiedruk"],
+            ["ino","Inotropie / contractiliteit"],
+            ["blood","Bloedtransfusie / Hb"]
+          ].map(x=>`<button class="opt" data-choice="${x[0]}">${x[1]}</button>`).join("")}
+        </div>
+        <div class="feedback" id="scenarioFb"></div>
+      </div>
+      <div class="chain hidden" id="scenarioChain"></div>
+    </div>`;
+  $$("#scenarioOpts .opt").forEach(b=>b.addEventListener("click",()=>{
+    $$("#scenarioOpts .opt").forEach(x=>x.classList.remove("selected")); b.classList.add("selected");
+    const ok=b.dataset.choice===s.best;
+    const fb=$("#scenarioFb"); fb.className="feedback show "+(ok?"good":"bad");
+    fb.textContent=(ok?"Passend bij het dominante mechanisme. ":"Deze interventie kan soms een rol hebben, maar grijpt niet het meest direct aan op het dominante mechanisme in dit scenario. ")+s.explanation;
+    const route={
+      volume:["Volume ↑","Preload ↑","SV ↑","CO ↑","O₂ delivery ↑"],
+      vaso:["Vasopressor ↑","Vaattonus / afterload ↑","Perfusiedruk ↑","O₂ delivery ondersteund"],
+      ino:["Inotropie ↑","Contractiliteit ↑","SV ↑","CO ↑","O₂ delivery ↑"],
+      blood:["Transfusie","Hb ↑","Arteriële O₂-inhoud ↑","O₂ delivery ↑"]
+    }[s.best];
+    const chain=$("#scenarioChain"); chain.classList.remove("hidden");
+    chain.innerHTML=route.map((x,i)=>`${i?'<span class="arrow">→</span>':''}<span class="box">${x}</span>`).join("");
+  }));
+}
+renderScenarioTabs();
+renderScenario(APP.scenarios[0]);
+
+renderControls();
+currentBase={...APP.baseline};
+activeScenario=null;
+update();
+</script>
+</body>
+</html>
