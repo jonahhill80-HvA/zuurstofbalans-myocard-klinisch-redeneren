@@ -1,0 +1,1024 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zuurstofbalans myocard – interactieve les klinisch redeneren</title>
+<style>
+:root{
+  --bg:#f4f6f8;--card:#fff;--text:#17202a;--muted:#5f6b76;--line:#cfd7de;
+  --accent:#173a78;--accent2:#0d6b68;--good:#1f7a4d;--warn:#9b6500;--bad:#9d3030;
+  --soft:#eef3f8;--soft2:#edf7f6;--radius:16px;--shadow:0 10px 28px rgba(20,32,45,.08)
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+button,input{font:inherit}
+button{cursor:pointer}
+a{color:inherit}
+header{background:linear-gradient(135deg,#172c69,#0d6b68);color:#fff;padding:34px 20px 28px}
+.wrap{max-width:1180px;margin:auto}
+.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:.78rem;font-weight:800;opacity:.88}
+h1{margin:.25rem 0 .7rem;font-size:clamp(2rem,4vw,3.2rem);line-height:1.08}
+header p{max-width:880px;margin:.25rem 0 0;opacity:.95}
+nav{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.97);border-bottom:1px solid var(--line);backdrop-filter:blur(8px)}
+.navrow{display:flex;gap:8px;overflow:auto;padding:10px 18px}
+.navrow a{text-decoration:none;white-space:nowrap;padding:8px 11px;border-radius:999px}
+.navrow a:hover,.navrow a:focus-visible{background:var(--soft)}
+main{padding:22px 18px 64px}
+section{max-width:1180px;margin:0 auto 22px;scroll-margin-top:78px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+.grid{display:grid;gap:16px}
+.grid.two{grid-template-columns:1fr 1fr}
+.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:880px){.grid.two,.grid.three{grid-template-columns:1fr}}
+h2{margin:.1rem 0 .9rem;font-size:1.6rem}
+h3{margin:.2rem 0 .7rem}
+p{margin:.5rem 0}
+.muted{color:var(--muted)}
+.small{font-size:.9rem}
+.pill{display:inline-block;padding:5px 10px;border-radius:999px;background:#e8f0f7;color:#234d75;font-weight:800;font-size:.82rem}
+.notice,.warning,.success,.error{padding:12px 14px;border-radius:10px;margin-top:12px}
+.notice{background:#f0f8f7;border-left:4px solid var(--accent2)}
+.warning{background:#fff8e9;border-left:4px solid var(--warn)}
+.success{background:#edf8f2;border-left:4px solid var(--good);color:#165d3b}
+.error{background:#fff1f1;border-left:4px solid var(--bad);color:#842323}
+.objectives{display:grid;gap:10px}
+.objective{padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:#fbfcfd}
+.balance{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:stretch}
+.balance .side{border:1px solid var(--line);border-radius:14px;padding:16px;background:#fbfcfd}
+.balance .vs{display:grid;place-items:center;font-weight:900;font-size:1.4rem;color:var(--accent2)}
+@media(max-width:700px){.balance{grid-template-columns:1fr}.balance .vs{height:28px}}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{padding:7px 10px;border-radius:999px;background:#eef3f8;border:1px solid #cdd7df;font-weight:700}
+.exercise{margin-top:14px;border:1px solid var(--line);border-radius:14px;background:#fbfcfd;padding:16px}
+.exercise h3{margin-top:0}
+.options{display:grid;gap:8px;margin-top:12px}
+.opt{width:100%;text-align:left;border:1px solid #c5d0d9;background:white;border-radius:10px;padding:11px 12px}
+.opt:hover,.opt:focus-visible{border-color:var(--accent2)}
+.opt.selected{border-color:var(--accent2);background:#edf8f6}
+.opt.correct{border-color:var(--good);background:#edf8f2}
+.opt.incorrect{border-color:var(--bad);background:#fff1f1}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.btn{border:0;border-radius:10px;padding:10px 14px;background:var(--accent);color:#fff;font-weight:800}
+.btn.secondary{background:#e8eef5;color:var(--text);border:1px solid #c6d1db}
+.btn.good{background:var(--accent2)}
+.external-link-btn{display:inline-flex;align-items:center;gap:.5rem;text-decoration:none;border:0;border-radius:10px;padding:10px 14px;background:var(--accent2);color:#fff;font-weight:800;margin-top:12px}
+.external-link-btn:hover,.external-link-btn:focus-visible{filter:brightness(.96)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.feedback{margin-top:10px}
+.hint{margin-top:8px;color:#6c4c00;background:#fff8e9;border-radius:9px;padding:10px 12px}
+.transfer{margin-top:10px;color:var(--muted);font-size:.93rem}
+.categorize-list{display:grid;gap:10px}
+.cat-item{border:1px solid var(--line);border-radius:12px;background:white;padding:12px}
+.cat-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.cat-actions button{border:1px solid #bfcad4;background:#f7f9fb;padding:8px 10px;border-radius:9px}
+.cat-actions button.active{background:#e7f4f2;border-color:var(--accent2)}
+.cat-status{margin-top:8px;font-size:.92rem}
+.progress{height:10px;background:#e5ebef;border-radius:999px;overflow:hidden}
+.progress>div{height:100%;background:var(--accent2);width:0;transition:width .2s}
+.case-step{border:1px solid var(--line);border-radius:14px;background:#fbfcfd;padding:16px;margin-top:12px}
+.case-step.locked{opacity:.55}
+.case-step .stepnum{font-size:.82rem;font-weight:900;color:var(--accent2);text-transform:uppercase;letter-spacing:.08em}
+.case-data{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0}
+@media(max-width:700px){.case-data{grid-template-columns:repeat(2,1fr)}}
+.datum{background:white;border:1px solid var(--line);border-radius:10px;padding:10px}
+.datum span{display:block;font-size:.78rem;color:var(--muted)}
+.multi-list{display:grid;gap:8px;margin-top:12px}
+.checkline{display:flex;gap:9px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px}
+.checkline input{margin-top:.3rem}
+.mechanism-lab{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:880px){.mechanism-lab{grid-template-columns:1fr}}
+.controls{display:grid;gap:10px}
+.control{border:1px solid var(--line);border-radius:12px;background:#fbfcfd;padding:12px}
+.control label{font-weight:800;display:block}
+.control input[type=range]{width:100%;accent-color:var(--accent2)}
+.route{display:grid;gap:8px}
+.route-row{display:grid;grid-template-columns:150px 1fr;gap:10px;align-items:center}
+@media(max-width:600px){.route-row{grid-template-columns:1fr}}
+.route-label{font-weight:800}
+.route-box{padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:#fff}
+.route-box.active{border-color:var(--accent2);background:#edf8f6}
+.route-box.risk{border-color:var(--warn);background:#fff8e9}
+.summary-list{display:grid;gap:10px}
+.summary-item{border:1px solid var(--line);border-radius:12px;background:#fbfcfd;padding:12px}
+details{border:1px solid var(--line);border-radius:12px;background:#fbfcfd;padding:10px 12px}
+details+details{margin-top:8px}
+summary{cursor:pointer;font-weight:800}
+footer{max-width:1180px;margin:auto;padding:0 18px 40px;color:var(--muted)}
+:focus-visible{outline:3px solid #ffbf47;outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="eyebrow">AM:AZT • Klinisch redeneren • bijeenkomst 5</div>
+    <h1>Zuurstofbalans van het myocard</h1>
+    <p>Redeneer van fysiologische determinant naar klinisch gevolg, monitoring, interventiedoel en herbeoordeling.</p>
+  </div>
+</header>
+
+<nav aria-label="Lesnavigatie">
+  <div class="wrap navrow">
+    <a href="#start">Start</a>
+    <a href="#basis">Basis</a>
+    <a href="#voorspellen">Voorspellen</a>
+    <a href="#casus1">Casus 1</a>
+    <a href="#sturen">Hemodynamisch sturen</a>
+    <a href="#monitoring">Monitoring</a>
+    <a href="#mechanisme">Dominant mechanisme</a>
+    <a href="#casus2">Casus 2</a>
+    <a href="#eindcheck">Eindcheck</a>
+    <a href="#bronnen">Bronbeperkingen</a>
+  </div>
+</nav>
+
+<main>
+<section id="start">
+  <div class="card">
+    <span class="pill">Start</span>
+    <h2>Leerdoelen</h2>
+    <div id="learningObjectives" class="objectives"></div>
+    <div class="notice">
+      <b>Vaste redeneerlijn</b>
+      <div style="margin-top:6px">situatie → primair probleem → fysiologische/pathofysiologische verandering → klinisch gevolg → monitoring/observatie → interventie → verwacht effect → herbeoordeling</div>
+    </div>
+  </div>
+</section>
+
+<section id="basis">
+  <div class="card">
+    <span class="pill">Conceptuele kapstok</span>
+    <h2>Aanbod versus behoefte</h2>
+    <div class="balance">
+      <div class="side">
+        <h3>O₂-aanbod myocard</h3>
+        <div class="chips" id="supplyChips"></div>
+      </div>
+      <div class="vs">↔</div>
+      <div class="side">
+        <h3>O₂-behoefte myocard</h3>
+        <div class="chips" id="demandChips"></div>
+      </div>
+    </div>
+    <div id="categorizeExercise"></div>
+  </div>
+</section>
+
+<section id="voorspellen">
+  <div class="card">
+    <span class="pill">Voorspel eerst</span>
+    <h2>Van determinant naar gevolg</h2>
+    <div id="predictExercises"></div>
+  </div>
+</section>
+
+<section id="casus1">
+  <div class="card">
+    <span class="pill">Integrale casus 1</span>
+    <h2>Man van 27 jaar onder spinale anesthesie</h2>
+    <div id="caseOne"></div>
+  </div>
+</section>
+
+<section id="sturen">
+  <div class="card">
+    <span class="pill">Mechanismen onderzoeken</span>
+    <h2>Hemodynamisch sturen</h2>
+    <p class="muted">Verander één interventieroute en bekijk uitsluitend de kwalitatieve relaties die in deze les zijn vastgesteld. Dit is geen doseer- of patiëntmodel.</p>
+    <div class="notice">
+      <b>Extra oefenen op een aparte pagina</b>
+      <div style="margin-top:6px">Open de uitgebreidere oefening <em>Hemodynamisch sturen</em> om vrij te experimenteren, eerst te voorspellen en klinische scenario's te doorlopen.</div>
+      <a class="external-link-btn" href="hemodynamisch-sturen-oefening.html">Open Hemodynamisch sturen →</a>
+    </div>
+    <div id="mechanismLab"></div>
+    <div id="hemoQuestions"></div>
+  </div>
+</section>
+
+<section id="monitoring">
+  <div class="card">
+    <span class="pill">Monitoring</span>
+    <h2>Welke meting toetst jouw hypothese?</h2>
+    <div id="monitoringExercises"></div>
+  </div>
+</section>
+
+<section id="mechanisme">
+  <div class="card">
+    <span class="pill">Beslisvragen</span>
+    <h2>Herken het dominante mechanisme</h2>
+    <div id="mechanismExercises"></div>
+  </div>
+</section>
+
+<section id="casus2">
+  <div class="card">
+    <span class="pill">Integrale casus 2</span>
+    <h2>Mevrouw Hartje</h2>
+    <div id="caseTwo"></div>
+  </div>
+</section>
+
+<section id="eindcheck">
+  <div class="card">
+    <span class="pill">Eindzelfcheck</span>
+    <h2>Doorloop de hele redeneerlijn zelfstandig</h2>
+    <div id="finalCheck"></div>
+  </div>
+</section>
+
+<section id="bronnen">
+  <div class="card">
+    <span class="pill">Bronbeperkingen</span>
+    <h2>Wat is bewust niet ingevuld?</h2>
+    <div id="limitations"></div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <p>Standalone HTML • vanilla JavaScript • geen externe libraries • geschikt voor lokaal gebruik en GitHub Pages.</p>
+</footer>
+
+<script>
+const lessonData = {
+  metadata: {
+    title: "Zuurstofbalans van het myocard",
+    course: "AM:AZT Klinisch Redeneren",
+    audience: "ASA I-II / laagcomplexe ingreep",
+    version: "1.0"
+  },
+  learningObjectives: [
+    "De klinische aandachtspunten benoemen en uitleggen met betrekking tot de zuurstofbalans van het myocard.",
+    "Beredeneren welk effect locoregionale en algehele anesthesie hebben op de klinische aandachtspunten van het cardiovasculair systeem bij een ASA I/II-patiënt.",
+    "De interventies benoemen die noodzakelijk zijn om de zuurstofbalans van het myocard stabiel te houden tijdens locoregionale en algehele anesthesie.",
+    "De soorten monitoring benoemen die nodig zijn om de klinische aandachtspunten van het cardiovasculair systeem tijdens de operatie te monitoren."
+  ],
+  concepts: {
+    supply: ["Coronaire toegankelijkheid","Diastolische duur","Diastolische druk","Hb","Saturatie"],
+    demand: ["Preload / veneus aanbod","Afterload / vaatweerstand","Hartfrequentie","Contractiliteit"],
+    both: ["Hartfrequentie"]
+  },
+  exercises: [
+    {
+      id:"cat-balance", component:"categorizeMany",
+      title:"Oefening 1 — Orden de zuurstofbalans",
+      prompt:"Plaats iedere determinant bij vooral zuurstofaanbod, vooral zuurstofbehoefte of beide zijden.",
+      categories:[
+        {id:"supply",label:"Vooral O₂-aanbod"},
+        {id:"demand",label:"Vooral O₂-behoefte"},
+        {id:"both",label:"Beide zijden"}
+      ],
+      items:[
+        {id:"coronary",label:"Coronaire toegankelijkheid",correct:"supply",feedback:{demand:"Je redeneert nu vanuit hartarbeid. Vraag eerst waardoor zuurstof het myocard daadwerkelijk bereikt.",both:"Coronaire toegankelijkheid hoort in deze les primair aan de aanbodzijde."}},
+        {id:"diaPressure",label:"Diastolische druk",correct:"supply",feedback:{demand:"Diastolische druk wordt in deze les gekoppeld aan de coronaire toevoer.",both:"De directe koppeling in deze les is de aanbodzijde via coronaire perfusie."}},
+        {id:"diaDuration",label:"Diastolische duur",correct:"supply",feedback:{demand:"De diastolische duur bepaalt hier vooral de beschikbare tijd voor coronaire perfusie.",both:"De duur zelf staat primair aan de aanbodzijde; hartfrequentie is de determinant die beide zijden raakt."}},
+        {id:"hb",label:"Hb",correct:"supply",feedback:{demand:"Een verandering in Hb verandert niet primair hoe hard het myocard werkt. Denk aan de transportfunctie van bloed.",both:"Hb staat in deze les primair bij het zuurstofaanbod."}},
+        {id:"sat",label:"Saturatie",correct:"supply",feedback:{demand:"Saturatie zegt iets over oxygenatie van het bloed en daarmee over aanbod.",both:"Saturatie staat hier primair aan de aanbodzijde."}},
+        {id:"preload",label:"Preload / veneus aanbod",correct:"demand",feedback:{supply:"Preload bepaalt in deze les vooral hoeveel belasting het hart moet verwerken.",both:"In deze les wordt preload primair bij de zuurstofbehoefte geplaatst."}},
+        {id:"afterload",label:"Afterload / vaatweerstand",correct:"demand",feedback:{supply:"Afterload is de weerstand waartegen het hart moet uitpompen. Denk aan myocardiale arbeid.",both:"In deze les wordt afterload primair bij de behoefte geplaatst."}},
+        {id:"contractility",label:"Contractiliteit",correct:"demand",feedback:{supply:"Sterkere contractie kost het myocard meer energie.",both:"Contractiliteit wordt hier primair als determinant van de behoefte behandeld."}},
+        {id:"hr",label:"Hartfrequentie",correct:"both",feedback:{supply:"Je ziet de invloed op de diastolische duur, maar nog niet de stijgende cardiale arbeid.",demand:"Je hebt één effect goed gezien. Vraag nu wat een hogere frequentie met de duur van de diastole doet."}}
+      ],
+      hint:"Aanbod = wat bepaalt hoeveel O₂ het myocard bereikt? Behoefte = wat bepaalt hoeveel werk het myocard moet leveren?",
+      correctFeedback:"Correct. Let op: hartfrequentie is bijzonder omdat deze zowel de behoefte als de beschikbare diastolische perfusietijd kan beïnvloeden.",
+      transfer:"Ga verder met hartfrequentie als scharnierconcept."
+    },
+    {
+      id:"pred-hr", component:"predictFirst",
+      title:"Oefening 2 — Hartfrequentie: één verandering, twee effecten",
+      prompt:"De hartfrequentie stijgt duidelijk. Welke combinatie beschrijft het effect op de myocardiale zuurstofbalans het best?",
+      options:[
+        {text:"De zuurstofbehoefte daalt en de diastolische duur neemt toe.",feedback:"Een hogere hartfrequentie betekent meer cardiale activiteit per minuut. De behoefte daalt daardoor niet. Denk ook aan de duur van één hartcyclus."},
+        {text:"De zuurstofbehoefte stijgt en de diastolische duur neemt af.",correct:true},
+        {text:"De zuurstofbehoefte stijgt, maar het zuurstofaanbod wordt hierdoor altijd beter.",feedback:"Je hebt de stijgende behoefte goed. Het tweede deel klopt niet: een hogere HF verkort de diastolische fase."},
+        {text:"Alleen de zuurstofbehoefte verandert; het zuurstofaanbod wordt niet beïnvloed.",feedback:"De behoefte verandert inderdaad, maar HF beïnvloedt ook de beschikbare diastolische perfusietijd."}
+      ],
+      hint:"Welke fase van de hartcyclus krijgt bij een hogere frequentie minder tijd?",
+      correctFeedback:"Juist. Een hogere HF werkt dubbel ongunstig: het myocard vraagt meer zuurstof terwijl de beschikbare diastolische tijd afneemt.",
+      transfer:"Pas dit mechanisme straks toe in de spinaalcasus."
+    },
+    {
+      id:"pred-hb", component:"predictFirst",
+      title:"Oefening 3 — Hb en saturatie",
+      prompt:"Een patiënt heeft een goede saturatie. Welke uitspraak past het beste bij de myocardiale zuurstofbalans?",
+      options:[
+        {text:"Een goede saturatie betekent automatisch dat het zuurstofaanbod via het bloed optimaal is.",feedback:"Je beoordeelt nu maar één van de twee factoren die de les onder zuurstofaanbod plaatst."},
+        {text:"Naast saturatie is ook Hb relevant voor het zuurstoftransport.",correct:true},
+        {text:"Hb speelt alleen een rol bij de zuurstofbehoefte van het myocard.",feedback:"Hb staat in het bronmateriaal bij het zuurstofaanbod, niet bij de behoefte."},
+        {text:"Bij een goede saturatie hoeft het Hb niet te worden beoordeeld.",feedback:"Juist de voorbereidingsopdracht vraagt waarom Hb preoperatief relevant is vanuit de zuurstofbalans."}
+      ],
+      hint:"Welke bloedwaarde staat in de les naast saturatie bij het zuurstofaanbod?",
+      correctFeedback:"Correct. Saturatie en Hb geven verschillende informatie over het zuurstofaanbod en moeten afzonderlijk worden beoordeeld.",
+      transfer:"Nu volgt een volledige klinische redeneerketen."
+    },
+
+    {
+      id:"hemo-volume", component:"predictFirst",
+      title:"Hemodynamisch sturen — volume / preload",
+      prompt:"Je verhoogt het veneuze aanbod/preload. Wat verwacht je primair voor de myocardiale zuurstofbehoefte?",
+      options:[
+        {text:"Deze kan toenemen doordat het hart meer aanbod moet verwerken.",correct:true},
+        {text:"Deze daalt altijd.",feedback:"De PowerPoint koppelt een hogere preload juist aan meer cardiale belasting."},
+        {text:"Alleen het Hb verandert.",feedback:"Preload is een hemodynamische determinant en verandert niet rechtstreeks Hb."},
+        {text:"Alleen de saturatie verandert.",feedback:"Preload verandert niet rechtstreeks de saturatie."}
+      ],
+      hint:"Wat betekent meer vulling voor de hoeveelheid werk die het hart moet verrichten?",
+      correctFeedback:"Juist. Meer preload kan de pompfunctie beïnvloeden, maar verhoogt tegelijk de cardiale belasting.",
+      transfer:"Vergelijk dit nu met afterload."
+    },
+    {
+      id:"hemo-vaso", component:"predictFirst",
+      title:"Hemodynamisch sturen — vaattonus / afterload",
+      prompt:"Een interventie verhoogt de vaattonus. Welke twee effecten moet je in deze les tegen elkaar afwegen?",
+      options:[
+        {text:"De perfusiedruk kan stijgen, maar ook de afterload en daarmee de cardiale belasting kunnen toenemen.",correct:true},
+        {text:"Hb en saturatie stijgen automatisch.",feedback:"Vaattonus grijpt niet rechtstreeks aan op Hb of saturatie."},
+        {text:"De afterload daalt terwijl de perfusiedruk stijgt.",feedback:"Een hogere vaatweerstand past niet bij een lagere afterload."},
+        {text:"De hartfrequentie bepaalt dan niets meer.",feedback:"HF blijft een determinant van de zuurstofbalans."}
+      ],
+      hint:"Denk aan het verschil tussen een gewenst effect op de druk en de extra weerstand waartegen het hart moet uitpompen.",
+      correctFeedback:"Juist. Een hogere perfusiedruk kan gunstig zijn voor het aanbod, terwijl extra afterload de behoefte kan verhogen.",
+      transfer:"Ga verder met contractiliteit."
+    },
+    {
+      id:"hemo-ino", component:"predictFirst",
+      title:"Hemodynamisch sturen — contractiliteit",
+      prompt:"Wanneer de contractiliteit stijgt, wat gebeurt er met de myocardiale zuurstofbehoefte?",
+      options:[
+        {text:"Die kan stijgen.",correct:true},
+        {text:"Die daalt altijd.",feedback:"Meer contractiekracht betekent meer myocardiale arbeid."},
+        {text:"Alleen Hb verandert.",feedback:"Contractiliteit grijpt primair aan op de pompfunctie, niet op Hb."},
+        {text:"Alleen de diastolische druk verandert.",feedback:"Contractiliteit is geen directe maat voor diastolische druk."}
+      ],
+      hint:"Meer spierarbeid vraagt meer of minder energie?",
+      correctFeedback:"Correct. Een verbetering van de pompfunctie kan tegelijk een hogere myocardiale zuurstofbehoefte geven.",
+      transfer:"Tot slot de Hb-route."
+    },
+    {
+      id:"hemo-blood", component:"predictFirst",
+      title:"Hemodynamisch sturen — Hb",
+      prompt:"Welke determinant beïnvloedt een verhoging van Hb primair?",
+      options:[
+        {text:"Arterieel zuurstoftransport / zuurstofaanbod",correct:true},
+        {text:"Afterload",feedback:"Afterload hoort bij de weerstand waartegen het hart uitpompt."},
+        {text:"Contractiliteit",feedback:"Contractiliteit hoort bij de pompkracht."},
+        {text:"Diastolische duur",feedback:"Diastolische duur wordt in deze les gekoppeld aan hartfrequentie en coronaire perfusie."}
+      ],
+      hint:"Denk terug aan de eerste categorisatie-oefening.",
+      correctFeedback:"Juist. Hiermee wordt niet primair de pomp beïnvloed, maar de zuurstofdragende kant van het aanbod.",
+      transfer:"Gebruik deze relaties bij het kiezen van monitoring en interventiedoelen."
+    },
+
+    {
+      id:"mon-hr", component:"monitoringChoice",
+      title:"Monitoring 1 — tachycardie en diastolische perfusie",
+      prompt:"Je vermoedt dat een hoge HF de myocardiale balans ongunstig beïnvloedt door hogere behoefte en kortere diastole. Welke combinatie toetst deze hypothese het meest rechtstreeks?",
+      options:[
+        {text:"HF + bloeddruk + ECG",correct:true},
+        {text:"Alleen Hb",feedback:"Hb toetst de zuurstofdragende capaciteit, maar niet primair jouw hypothese over HF en diastolische perfusie."},
+        {text:"Alleen temperatuur",feedback:"Temperatuur hoort niet bij de centrale hypothese."},
+        {text:"Alleen urineproductie",feedback:"Urineproductie zegt meer over bredere orgaanperfusie dan over deze directe hypothese."}
+      ],
+      hint:"Kies eerst de meting van de oorzaak en daarna een meting van het mogelijke myocardiale gevolg.",
+      correctFeedback:"Correct. Monitoring volgt hier uit de fysiologische hypothese.",
+      transfer:"Pas dezelfde logica toe op zuurstoftransport."
+    },
+    {
+      id:"mon-hb", component:"monitoringChoice",
+      title:"Monitoring 2 — zuurstoftransport via bloed",
+      prompt:"Welke combinatie sluit het best aan op een vermoeden dat het zuurstofaanbod via het bloed tekortschiet?",
+      options:[
+        {text:"Hb en saturatie",correct:true},
+        {text:"Alleen HF",feedback:"HF zegt niets rechtstreeks over de twee bloedgerelateerde aanbodfactoren die hier worden onderzocht."},
+        {text:"Alleen capillaire refill",feedback:"Capillaire refill kan iets zeggen over perifere perfusie, maar toetst niet rechtstreeks Hb en saturatie."},
+        {text:"Alleen diastolische bloeddruk",feedback:"Diastolische druk is relevant voor coronaire perfusie, maar niet voor deze hypothese over bloedgebonden zuurstoftransport."}
+      ],
+      hint:"Welke twee variabelen staan in de les bij het zuurstofdragende aanbod?",
+      correctFeedback:"Juist. Hb en saturatie geven verschillende informatie en moeten naast elkaar worden beoordeeld.",
+      transfer:"Ga verder naar dominante mechanismen."
+    },
+
+    {
+      id:"mech-vaso", component:"primaryProblem",
+      title:"Scenario A — lage vaattonus",
+      prompt:"De bloeddruk daalt. Hb en saturatie geven geen aanwijzing voor een primair tekort aan zuurstoftransport. Het dominante probleem lijkt een te lage vaattonus. Welke determinant wil je primair beïnvloeden?",
+      options:[
+        {text:"Afterload/vaattonus en perfusiedruk",correct:true},
+        {text:"Hb",feedback:"Er is geen aanwijzing dat Hb het primaire probleem is."},
+        {text:"Contractiliteit",feedback:"De casus noemt geen primaire pompfunctiestoornis."},
+        {text:"Alleen hartfrequentie",feedback:"HF kan relevant zijn, maar is hier niet als dominante afwijking gegeven."}
+      ],
+      hint:"Welke determinant wordt rechtstreeks beschreven als te laag?",
+      correctFeedback:"Correct. Eerst behandel je het dominante mechanisme.",
+      transfer:"Volgend scenario: laag veneus aanbod."
+    },
+    {
+      id:"mech-preload", component:"primaryProblem",
+      title:"Scenario B — laag veneus aanbod",
+      prompt:"Het dominante probleem is een laag veneus aanbod. Welke determinant wil je primair beïnvloeden?",
+      options:[
+        {text:"Preload",correct:true},
+        {text:"Hb verhogen ongeacht Hb",feedback:"De gegeven probleemstelling is geen primair Hb-probleem."},
+        {text:"Contractiliteit als eerste determinant",feedback:"De pompkracht is hier niet als primair probleem gegeven."},
+        {text:"Alleen diastolische duur",feedback:"Dat grijpt niet rechtstreeks aan op het beschreven lage veneuze aanbod."}
+      ],
+      hint:"Welke determinant is letterlijk als probleem gegeven?",
+      correctFeedback:"Correct. De interventie moet rechtstreeks aangrijpen op het primaire mechanisme.",
+      transfer:"Volgend scenario: verminderde contractiliteit."
+    },
+    {
+      id:"mech-contract", component:"primaryProblem",
+      title:"Scenario C — verminderde contractiliteit",
+      prompt:"De preload is niet het dominante probleem; de pompfunctie/contractiliteit is verminderd. Welke determinant wil je primair beïnvloeden?",
+      options:[
+        {text:"Contractiliteit",correct:true},
+        {text:"Alleen Hb",feedback:"Er is geen primair probleem met zuurstoftransport via Hb gegeven."},
+        {text:"Alleen preload",feedback:"De casus zegt juist dat preload niet het dominante probleem is."},
+        {text:"Alleen saturatie",feedback:"Saturatie is niet als primaire afwijking gegeven."}
+      ],
+      hint:"Welke pompfunctievariabele wordt rechtstreeks als verminderd beschreven?",
+      correctFeedback:"Juist. Let vervolgens wel op de keerzijde: een hogere contractiliteit verhoogt ook de myocardiale zuurstofbehoefte.",
+      transfer:"Volgend scenario: laag Hb."
+    },
+    {
+      id:"mech-hb", component:"primaryProblem",
+      title:"Scenario D — laag Hb",
+      prompt:"De hemodynamiek is niet het primaire probleem; het Hb is verlaagd. Welke determinant wil je primair beïnvloeden?",
+      options:[
+        {text:"Zuurstofdragend vermogen / Hb",correct:true},
+        {text:"Afterload",feedback:"Afterload is niet het dominante probleem in deze situatie."},
+        {text:"Contractiliteit",feedback:"De pomp is niet als primair probleem gegeven."},
+        {text:"Preload",feedback:"Het lage Hb ligt aan de aanbodzijde en niet primair bij de vulling."}
+      ],
+      hint:"Ligt het probleem in de pomp of in het zuurstofdragende bloed?",
+      correctFeedback:"Correct. Hier ligt het dominante probleem aan de aanbodzijde.",
+      transfer:"Daarna volgt de complexe casus van mevrouw Hartje."
+    }
+  ],
+
+  cases: [
+    {
+      id:"case1",
+      title:"Man van 27 jaar onder spinale anesthesie",
+      intro:"Een man van 27 jaar met blanco anamnese komt voor het hechten van een achillespeesruptuur links onder spinale anesthesie. Oriënterend bloedonderzoek toont geen bijzonderheden en hij heeft geen premedicatie gehad. Na het inspuiten krijgt hij warme billen en voeten. In buikligging klaagt hij over hartkloppingen. De pols is 100/min en krachtig. Routinematig wordt de infuussnelheid wat opgevoerd.",
+      steps:[
+        {
+          title:"Situatie → primair probleem",
+          prompt:"Welke verandering verdient vanuit de myocardiale zuurstofbalans als eerste verdere beoordeling?",
+          options:[
+            {text:"Alleen het Hb",feedback:"Hb is relevant voor aanbod, maar er is een actuele verandering na de anesthesie die eerst fysiologisch moet worden geduid."},
+            {text:"De veranderde circulatoire situatie na de spinale anesthesie, inclusief bloeddruk en HF",correct:true},
+            {text:"Alleen de saturatie",feedback:"Saturatie is één determinant, maar verklaart niet de actuele hartkloppingen en circulatoire verandering."},
+            {text:"Alleen de lichaamstemperatuur",feedback:"Temperatuur is hier niet het centrale aandachtspunt van de gegeven opdracht."}
+          ],
+          hint:"Welke twee actuele cardiovasculaire gegevens worden direct na de verandering genoemd?",
+          correctFeedback:"Juist. Eerst beoordeel je de veranderde hemodynamische situatie; daarna plaats je die binnen aanbod en behoefte."
+        },
+        {
+          title:"Fysiologische verandering",
+          prompt:"Welke richting verwacht je bij de bloeddruk op basis van de voorbereidingsopdracht?",
+          options:[
+            {text:"De bloeddruk zal waarschijnlijk dalen.",correct:true},
+            {text:"De bloeddruk moet stijgen omdat de pols krachtig is.",feedback:"Een krachtige pols is niet voldoende om de arteriële druk af te leiden. Kijk naar de verandering die de anesthesietechniek in deze opdracht centraal stelt."},
+            {text:"De bloeddruk blijft per definitie gelijk.",feedback:"De opdracht vraagt juist expliciet welke bloeddrukverandering je verwacht."},
+            {text:"Uit de casus kan de bloeddruk niet relevant veranderen.",feedback:"De bloeddruk is hier geen toevallige parameter; hij vormt de eerste voorbereidingsvraag."}
+          ],
+          hint:"Koppel de situatie aan de eerder besproken effecten van een spinaal op de circulatie.",
+          correctFeedback:"Correct. De volgende vraag is wat een dalende druk voor het myocard betekent."
+        },
+        {
+          title:"Klinisch gevolg: aanbod",
+          prompt:"Stel dat vooral de diastolische bloeddruk daalt. Wat verwacht je dan voor het zuurstofaanbod via de coronairen?",
+          options:[
+            {text:"Het aanbod wordt gunstiger.",feedback:"Denk aan de relatie tussen diastolische druk en coronaire perfusie."},
+            {text:"Het aanbod kan afnemen.",correct:true},
+            {text:"Alleen de zuurstofbehoefte verandert.",feedback:"De diastolische bloeddruk staat juist aan de aanbodzijde."},
+            {text:"Hb stijgt hierdoor.",feedback:"Een drukverandering verhoogt het Hb niet."}
+          ],
+          hint:"Welke bloeddrukwaarde staat in het schema bij coronaire zuurstoftoevoer?",
+          correctFeedback:"Juist. Een dalende diastolische druk kan de coronaire toevoer ongunstiger maken."
+        },
+        {
+          title:"Klinisch gevolg: behoefte",
+          prompt:"De patiënt heeft een HF van 100/min en hartkloppingen. Welke redenering hoort hierbij?",
+          options:[
+            {text:"Een hogere HF vermindert de zuurstofbehoefte.",feedback:"Meer cardiale activiteit per minuut past niet bij een lagere behoefte."},
+            {text:"Een hogere HF kan de zuurstofbehoefte verhogen én de diastolische duur verkorten.",correct:true},
+            {text:"HF heeft alleen invloed op Hb.",feedback:"HF verandert het Hb niet rechtstreeks."},
+            {text:"HF is alleen relevant voor de respiratie.",feedback:"HF staat in deze les juist centraal bij de myocardiale balans."}
+          ],
+          hint:"Denk aan zowel cardiale arbeid als diastolische tijd.",
+          correctFeedback:"Correct. HF kan in deze situatie beide zijden van de balans ongunstig beïnvloeden."
+        },
+        {
+          title:"Monitoring",
+          prompt:"Welke combinatie is nu het meest rechtstreeks relevant om de hypothese over myocardiale zuurstofbalans verder te beoordelen?",
+          options:[
+            {text:"HF en bloeddruk",correct:true},
+            {text:"Alleen temperatuur",feedback:"Temperatuur toetst niet rechtstreeks de actuele hypothese over HF en perfusiedruk."},
+            {text:"Alleen urineproductie",feedback:"Urineproductie is breder relevant, maar niet de meest directe toets van deze hypothese."},
+            {text:"Alleen Hb",feedback:"Hb is belangrijk voor aanbod, maar verklaart niet alleen de plotselinge situatie na de spinaal."}
+          ],
+          hint:"Welke variabelen gebruikte je in je twee voorafgaande redeneerstappen?",
+          correctFeedback:"Correct. Monitoring moet je hypothese rechtstreeks kunnen toetsen."
+        },
+        {
+          title:"Interventie",
+          prompt:"Wat is vóór het kiezen van een interventie de juiste redeneerstap?",
+          options:[
+            {text:"Meteen een willekeurige cardiovasculaire medicatie geven.",feedback:"Je springt rechtstreeks van observatie naar behandeling. Lokaliseer eerst het primaire mechanisme."},
+            {text:"Eerst bepalen welke determinant primair afwijkend is en daarop de interventie richten.",correct:true},
+            {text:"Alleen naar de systolische bloeddruk kijken.",feedback:"Eén getal is geen volledige probleemdefinitie."},
+            {text:"Alleen de hartfrequentie normaliseren.",feedback:"HF kan belangrijk zijn, maar je moet eerst de hele balans beoordelen."}
+          ],
+          hint:"Waar wil je fysiologisch aan ‘draaien’?",
+          correctFeedback:"Juist. De interventie volgt uit het mechanisme, niet uit één los getal."
+        },
+        {
+          title:"Verwacht effect → herbeoordeling",
+          prompt:"Nadat een gerichte interventie is uitgevoerd, wat is de beste vervolgstap?",
+          options:[
+            {text:"De casus afsluiten zodra de interventie gegeven is.",feedback:"Een interventie is een hypothese die opnieuw moet worden getoetst."},
+            {text:"Opnieuw HF, bloeddruk en relevante tekenen beoordelen en vergelijken met het verwachte effect.",correct:true},
+            {text:"Alleen registreren welke interventie is gegeven.",feedback:"Registratie vervangt de klinische herbeoordeling niet."},
+            {text:"Een nieuwe interventie starten zonder te evalueren.",feedback:"Zonder evaluatie weet je niet of je eerste hypothese klopte."}
+          ],
+          hint:"Welke parameters verwachtte je vóór de interventie te zien veranderen?",
+          correctFeedback:"Correct. Daarmee is de redeneercirkel rond."
+        }
+      ]
+    },
+
+    {
+      id:"case2",
+      title:"Mevrouw Hartje",
+      intro:"Het betreft een 73-jarige vrouw. Zij werd acuut benauwd; de ambulance treft een hoge ademhalingsfrequentie, lage saturatie, crepitaties en een hartfrequentie van 121/min. Op het ECG zijn afwijkingen beschreven passend bij een doorgemaakt en acuut voorwandinfarct. Later worden onder andere NIBP 155/100, gestuwde halsvenen, capillaire refill >2 seconden en bleekheid beschreven.",
+      data:[
+        ["HF","121/min"],["NIBP","155/100"],["SpO₂","93% met 15 L O₂"],["Ritme","sinustachycardie"],
+        ["Halsvenen","gestuwd"],["Cap. refill",">2 sec"],["Kleur","bleek"],["ECG","ischemie/infarct beschreven"]
+      ],
+      steps:[
+        {
+          type:"multi",
+          title:"Situatie → relevante gegevens selecteren",
+          prompt:"Welke gegevens zijn rechtstreeks relevant voor het beoordelen van de myocardiale zuurstofbalans? Selecteer alle relevante gegevens.",
+          options:[
+            {id:"hf",text:"HF 121/min",correct:true},
+            {id:"ecg",text:"ECG-afwijkingen",correct:true},
+            {id:"spo2",text:"SpO₂ verlaagd / hoge O₂-behoefte",correct:true},
+            {id:"bp",text:"NIBP 155/100",correct:true},
+            {id:"jvp",text:"Gestuwde halsvenen",correct:true},
+            {id:"crt",text:"Capillaire refill >2 sec / bleek",correct:true},
+            {id:"history",text:"Cardiaal blanco voorgeschiedenis",correct:false,feedback:"Dit helpt bij de context, maar is niet de meest directe actuele determinant of observatie van de myocardiale zuurstofbalans."},
+            {id:"fasting",text:"Onbekende nuchterheid",correct:false,feedback:"Dit is perioperatief relevant, maar niet de meest directe determinant of observatie van de myocardiale zuurstofbalans."}
+          ],
+          hint:"Gebruik de kapstok: coronairen – diastole – Hb/saturatie versus preload – afterload – HF – contractiliteit.",
+          correctFeedback:"Goed. Je hebt de casus teruggebracht van veel patiëntinformatie naar gegevens die de centrale fysiologische vraag kunnen beantwoorden."
+        },
+        {
+          title:"Primair probleem",
+          prompt:"Welke conclusie past het best bij de beschikbare gegevens?",
+          options:[
+            {text:"Er zijn aanwijzingen dat zowel het zuurstofaanbod als de zuurstofbehoefte ongunstig zijn.",correct:true},
+            {text:"Alleen het Hb is afwijkend.",feedback:"De casus bevat meerdere aanwijzingen buiten Hb. Kijk opnieuw naar HF, ECG, saturatie en vaatweerstand."},
+            {text:"Alleen de preload is afwijkend.",feedback:"Preload is slechts één onderdeel en verklaart niet de volledige combinatie."},
+            {text:"De zuurstofbalans is gunstig omdat de bloeddruk hoog is.",feedback:"Een hoge bloeddruk betekent niet automatisch een gunstige zuurstofbalans. Kijk ook naar afterload, HF en coronaire conditie."}
+          ],
+          hint:"Maak twee kolommen: wat gaat ongunstig aan de aanbodzijde en wat aan de behoeftekant?",
+          correctFeedback:"Correct. Meerdere factoren werken tegelijk en soms in tegengestelde richting."
+        },
+        {
+          type:"categorize",
+          title:"Fysiologische/pathofysiologische verandering",
+          prompt:"Plaats ieder gegeven bij aanbod ↓, behoefte ↑ of ondersteunende observatie.",
+          categories:[
+            {id:"supplyDown",label:"Aanbod ↓"},
+            {id:"demandUp",label:"Behoefte ↑"},
+            {id:"support",label:"Ondersteunende observatie"}
+          ],
+          items:[
+            {id:"ischemia",label:"ECG-ischemie / gestoorde coronaire flow",correct:"supplyDown"},
+            {id:"hrDia",label:"HF 121 → kortere diastolische fase",correct:"supplyDown"},
+            {id:"satLow",label:"Lage saturatie",correct:"supplyDown"},
+            {id:"hrWork",label:"HF 121 → meer cardiale arbeid",correct:"demandUp"},
+            {id:"svr",label:"Verhoogde vaatweerstand / vasoconstrictie",correct:"demandUp"},
+            {id:"jvp",label:"Gestuwde halsvenen",correct:"support"},
+            {id:"crt",label:"Cap refill >2 sec / bleek",correct:"support"}
+          ],
+          hint:"Vraag per gegeven: verandert dit primair toevoer, cardiale arbeid of is het vooral een observatie van de circulatoire toestand?",
+          correctFeedback:"Juist. Dezelfde patiëntparameter kan via verschillende mechanismen effect hebben."
+        },
+        {
+          title:"Monitoring",
+          prompt:"Welke set monitoring sluit het best aan op de gevonden problemen?",
+          options:[
+            {text:"HF/ritme en ECG, bloeddruk, saturatie en relevante bloedwaarden zoals Hb",correct:true},
+            {text:"Alleen temperatuur",feedback:"Temperatuur dekt de gevonden myocardiale determinanten niet."},
+            {text:"Alleen bewustzijn",feedback:"Bewustzijn is te indirect voor de gevonden cardiovasculaire en zuurstoftransportproblemen."},
+            {text:"Alleen urineproductie",feedback:"Urineproductie is te indirect om deze volledige hypothese te toetsen."}
+          ],
+          hint:"Maak voor iedere gevonden determinant één meetvraag: hoe weet ik of deze werkelijk afwijkend is?",
+          correctFeedback:"Correct. Je monitoring volgt nu uit je hypothese in plaats van uit een standaardlijst."
+        },
+        {
+          title:"Interventiedoel",
+          prompt:"Welke interventiestrategie past het best bij de gevonden disbalans?",
+          options:[
+            {text:"Alleen één los getal corrigeren.",feedback:"De casus laat meerdere gelijktijdige verstoringen zien."},
+            {text:"Gericht factoren aanpakken die het aanbod beperken én factoren die de behoefte ongunstig verhogen.",correct:true},
+            {text:"Alleen de systolische bloeddruk verder verhogen.",feedback:"Een hogere druk kan ook extra afterload betekenen. Kijk naar de balans in plaats van één getal."},
+            {text:"Alleen naar de saturatie kijken.",feedback:"Saturatie is slechts één determinant van het aanbod."}
+          ],
+          hint:"Welke twee kolommen heb je in de vorige stap gevuld?",
+          correctFeedback:"Juist. Bij een complexe casus moeten aanbod én behoefte opnieuw in balans worden gebracht."
+        },
+        {
+          title:"Verwacht effect",
+          prompt:"Welk criterium past het best om te beoordelen of het gekozen beleid fysiologisch de goede kant op gaat?",
+          options:[
+            {text:"De relevante determinanten bewegen in gunstige richting en tekenen van cardiale belasting/ischemie nemen niet verder toe.",correct:true},
+            {text:"Eén willekeurige parameter verandert.",feedback:"Een losse verandering bewijst niet dat de hele balans verbetert."},
+            {text:"De interventie is gegeven, dus verdere beoordeling is niet nodig.",feedback:"Een interventie is een hypothese die met nieuwe patiëntgegevens moet worden getoetst."},
+            {text:"Alleen de systolische bloeddruk stijgt.",feedback:"De systolische bloeddruk alleen vertegenwoordigt niet zowel aanbod als behoefte."}
+          ],
+          hint:"Herhaal dezelfde kapstok waarmee je het probleem hebt vastgesteld.",
+          correctFeedback:"Correct. Het effect moet worden beoordeeld op de relevante mechanismen."
+        },
+        {
+          title:"Herbeoordeling",
+          prompt:"De bron bevat geen nieuwe postinterventie-waarden. Wat is daarom de juiste werkwijze zodra nieuwe informatie beschikbaar is?",
+          options:[
+            {text:"Nieuwe data vergelijken met het vooraf verwachte effect, de hypothese bevestigen of herzien en het beleid zo nodig aanpassen.",correct:true},
+            {text:"De casus beëindigen omdat de interventie al is gegeven.",feedback:"Zonder herbeoordeling weet je niet of het beleid werkte."},
+            {text:"Alleen kijken of één parameter verbetert.",feedback:"De casus bevat meerdere relevante determinanten."},
+            {text:"Nieuwe interventies toevoegen zonder de eerdere hypothese te toetsen.",feedback:"Dan verlies je het verband tussen oorzaak, interventie en effect."}
+          ],
+          hint:"Wat voorspelde je vóór de interventie?",
+          correctFeedback:"Juist. Daarmee heb je de volledige klinische redeneercirkel doorlopen."
+        }
+      ]
+    }
+  ],
+
+  finalCheck:[
+    {
+      prompt:"Tijdens anesthesie stijgt de HF, de diastolische bloeddruk daalt en Hb en saturatie zijn niet veranderd. Wat is het primaire probleem voor de zuurstofbalans?",
+      options:[
+        {text:"Alleen zuurstoftransport via Hb",feedback:"Hb en saturatie zijn juist niet veranderd."},
+        {text:"HF en coronaire perfusieomstandigheden",correct:true},
+        {text:"Alleen contractiliteit",feedback:"Contractiliteit is niet als veranderde determinant gegeven."},
+        {text:"Alleen saturatie",feedback:"Saturatie is juist niet veranderd."}
+      ],
+      hint:"Welke twee variabelen veranderen daadwerkelijk?",
+      correctFeedback:"Correct. Je lokaliseert eerst de veranderde determinanten."
+    },
+    {
+      prompt:"Wat gebeurt er fysiologisch?",
+      options:[
+        {text:"Behoefte ↑ en diastolische duur/perfusieomstandigheden worden ongunstiger",correct:true},
+        {text:"Behoefte ↓ en aanbod ↑",feedback:"Dit is tegengesteld aan de eerder geoefende HF-relaties."},
+        {text:"Alleen Hb verandert",feedback:"Hb is niet veranderd."},
+        {text:"Er gebeurt niets met de myocardiale balans",feedback:"Zowel HF als diastolische druk zijn kernvariabelen in deze les."}
+      ],
+      hint:"Denk aan beide zijden van de balans.",
+      correctFeedback:"Juist. Je koppelt de verandering aan aanbod én behoefte."
+    },
+    {
+      prompt:"Welke monitoring sluit hierbij aan?",
+      options:[
+        {text:"HF/ritme, ECG en bloeddruk",correct:true},
+        {text:"Alleen Hb",feedback:"Hb is niet de centrale veranderde determinant in deze situatie."},
+        {text:"Alleen temperatuur",feedback:"Temperatuur toetst de hypothese niet rechtstreeks."},
+        {text:"Geen aanvullende observatie nodig",feedback:"De hypothese moet met patiëntgegevens worden getoetst."}
+      ],
+      hint:"Meet de oorzaak én het mogelijke myocardiale gevolg.",
+      correctFeedback:"Correct. De monitoring volgt uit de hypothese."
+    },
+    {
+      prompt:"Hoe kies je een interventie?",
+      options:[
+        {text:"Op basis van het dominante fysiologische mechanisme",correct:true},
+        {text:"Altijd volume",feedback:"Volume grijpt alleen passend aan wanneer preload het dominante probleem is."},
+        {text:"Altijd inotropie",feedback:"Inotropie past alleen wanneer contractiliteit het dominante probleem is."},
+        {text:"Willekeurig zolang de bloeddruk maar verandert",feedback:"Een los getal vervangen door een ander is geen fysiologische redenering."}
+      ],
+      hint:"Op welke determinant baseer je deze keuze?",
+      correctFeedback:"Juist. Eerst het mechanisme, daarna de interventie."
+    },
+    {
+      prompt:"Wat doe je daarna?",
+      options:[
+        {text:"Het verwachte effect vooraf benoemen en na de interventie dezelfde relevante parameters herbeoordelen",correct:true},
+        {text:"De interventie registreren en stoppen met redeneren",feedback:"Registratie vervangt herbeoordeling niet."},
+        {text:"Meteen een tweede interventie starten",feedback:"Eerst moet je het effect van de eerste interventie beoordelen."},
+        {text:"Alleen controleren of de patiënt wakker is",feedback:"Dat toetst de gevonden myocardiale hypothese niet rechtstreeks."}
+      ],
+      hint:"situatie → determinant → balans → monitoring → interventie → effect → opnieuw meten",
+      correctFeedback:"Je hebt de volledige redeneerlijn zelfstandig toegepast."
+    }
+  ],
+
+  limitations:[
+    "De bron bevat geen volledig uitgewerkt postinterventie-verloop met nieuwe vitale waarden voor de twee casussen. Daarom zijn geen nieuwe numerieke postinterventie-waarden toegevoegd.",
+    "De uitgebreide ACS-behandeling uit de PowerPoint is niet omgezet naar een aparte medicatietoets; de les focust op interventies beredeneren vanuit de myocardiale zuurstofbalans.",
+    "ABCDE, SIRS/qSOFA, shock, microcirculatie en brede differentiaaldiagnostiek zijn alleen meegenomen waar zij de centrale redeneerlijn ondersteunen.",
+    "Het onderdeel ‘Hemodynamisch sturen’ is kwalitatief gehouden. Het visualiseert alleen reeds goedgekeurde relaties en bevat geen doseringen of nieuwe patiëntspecifieke rekenclaims."
+  ]
+};
+
+// ---------- Generic render helpers ----------
+const $ = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+
+function feedbackBox(kind,text){
+  return `<div class="${kind==='good'?'success':'error'}">${text}</div>`;
+}
+function hintBox(text){ return `<div class="hint"><b>Hint:</b> ${text}</div>`; }
+
+function renderLearningObjectives(){
+  $("#learningObjectives").innerHTML = lessonData.learningObjectives
+    .map((x,i)=>`<div class="objective"><b>${i+1}.</b> ${x}</div>`).join("");
+  $("#supplyChips").innerHTML = lessonData.concepts.supply.map(x=>`<span class="chip">${x}</span>`).join("");
+  $("#demandChips").innerHTML = lessonData.concepts.demand.map(x=>`<span class="chip">${x}</span>`).join("");
+}
+
+function renderSingleChoice(ex, host){
+  const wrap=document.createElement("div");
+  wrap.className="exercise";
+  let attempts=0, solved=false;
+  wrap.innerHTML=`<h3>${ex.title||""}</h3><p>${ex.prompt}</p>
+    <div class="options"></div><div class="feedback" aria-live="polite"></div>`;
+  const optionsHost=$(".options",wrap), fb=$(".feedback",wrap);
+
+  ex.options.forEach((o)=>{
+    const b=document.createElement("button");
+    b.className="opt"; b.type="button"; b.textContent=o.text;
+    b.addEventListener("click",()=>{
+      if(solved) return;
+      attempts++;
+      $$(".opt",optionsHost).forEach(x=>x.classList.remove("selected","incorrect"));
+      b.classList.add("selected");
+      if(o.correct){
+        solved=true; b.classList.add("correct");
+        fb.innerHTML=feedbackBox("good",ex.correctFeedback||"Correct.")+
+          (ex.transfer?`<div class="transfer"><b>Transfer:</b> ${ex.transfer}</div>`:"");
+      } else {
+        b.classList.add("incorrect");
+        const specific=o.feedback||"Deze redenering past niet bij het onderliggende mechanisme.";
+        fb.innerHTML=feedbackBox("bad",specific)+(attempts>=1 && ex.hint?hintBox(ex.hint):"");
+      }
+    });
+    optionsHost.appendChild(b);
+  });
+  host.appendChild(wrap);
+}
+
+function renderCategorize(ex, host){
+  const wrap=document.createElement("div"); wrap.className="exercise";
+  const state={};
+  wrap.innerHTML=`<h3>${ex.title||""}</h3><p>${ex.prompt}</p><div class="categorize-list"></div>
+    <div class="btnrow"><button class="btn" type="button">Controleer</button></div>
+    <div class="feedback" aria-live="polite"></div>`;
+  const list=$(".categorize-list",wrap), fb=$(".feedback",wrap), check=$(".btn",wrap);
+  ex.items.forEach(item=>{
+    const row=document.createElement("div"); row.className="cat-item";
+    row.innerHTML=`<b>${item.label}</b><div class="cat-actions"></div><div class="cat-status"></div>`;
+    const actions=$(".cat-actions",row);
+    ex.categories.forEach(cat=>{
+      const b=document.createElement("button"); b.type="button"; b.textContent=cat.label;
+      b.addEventListener("click",()=>{
+        state[item.id]=cat.id;
+        $$("button",actions).forEach(x=>x.classList.remove("active"));
+        b.classList.add("active");
+      });
+      actions.appendChild(b);
+    });
+    list.appendChild(row);
+  });
+  check.addEventListener("click",()=>{
+    let all=true, missing=false;
+    ex.items.forEach((item,idx)=>{
+      const row=list.children[idx], status=$(".cat-status",row), chosen=state[item.id];
+      if(!chosen){all=false;missing=true;status.innerHTML=`<span class="muted">Nog geen keuze gemaakt.</span>`;return}
+      if(chosen===item.correct){
+        status.innerHTML=`<span style="color:var(--good);font-weight:800">Correct.</span>`;
+      } else {
+        all=false;
+        const msg=(item.feedback||{})[chosen]||"Deze categorie past niet bij het afgesproken mechanisme.";
+        status.innerHTML=`<span style="color:var(--bad)">${msg}</span>`;
+      }
+    });
+    if(all){
+      fb.innerHTML=feedbackBox("good",ex.correctFeedback||"Alles correct.")+(ex.transfer?`<div class="transfer"><b>Transfer:</b> ${ex.transfer}</div>`:"");
+    } else {
+      fb.innerHTML=(missing?feedbackBox("bad","Maak eerst bij ieder item een keuze."):"")+hintBox(ex.hint||"Redeneer opnieuw vanuit het mechanisme.");
+    }
+  });
+  host.appendChild(wrap);
+}
+
+function renderMultiSelectStep(step, host, onSolved){
+  const wrap=document.createElement("div"); wrap.className="exercise";
+  wrap.innerHTML=`<h3>${step.title}</h3><p>${step.prompt}</p><div class="multi-list"></div>
+    <div class="btnrow"><button class="btn" type="button">Controleer</button></div>
+    <div class="feedback" aria-live="polite"></div>`;
+  const list=$(".multi-list",wrap), fb=$(".feedback",wrap);
+  step.options.forEach(o=>{
+    const label=document.createElement("label"); label.className="checkline";
+    label.innerHTML=`<input type="checkbox" value="${o.id}"><span>${o.text}</span>`;
+    list.appendChild(label);
+  });
+  $(".btn",wrap).addEventListener("click",()=>{
+    const selected=new Set($$("input:checked",wrap).map(x=>x.value));
+    const wrongChosen=step.options.filter(o=>selected.has(o.id) && !o.correct);
+    const missed=step.options.filter(o=>o.correct && !selected.has(o.id));
+    if(!wrongChosen.length && !missed.length){
+      fb.innerHTML=feedbackBox("good",step.correctFeedback||"Correct.");
+      onSolved?.();
+      return;
+    }
+    let messages=[];
+    wrongChosen.forEach(o=>messages.push(o.feedback||`“${o.text}” is voor deze specifieke vraag niet de meest directe keuze.`));
+    if(missed.length) messages.push("Je mist nog één of meer direct relevante gegevens. Gebruik de fysiologische kapstok.");
+    fb.innerHTML=feedbackBox("bad",messages.join(" "))+hintBox(step.hint||"Kijk opnieuw naar het mechanisme.");
+  });
+  host.appendChild(wrap);
+}
+
+function renderCase(caseData, host){
+  const intro=document.createElement("div");
+  intro.innerHTML=`<div class="notice"><b>Startsituatie</b><div style="margin-top:6px">${caseData.intro}</div></div>`;
+  host.appendChild(intro);
+  if(caseData.data){
+    const grid=document.createElement("div"); grid.className="case-data";
+    grid.innerHTML=caseData.data.map(d=>`<div class="datum"><span>${d[0]}</span><b>${d[1]}</b></div>`).join("");
+    host.appendChild(grid);
+  }
+  const progress=document.createElement("div"); progress.className="progress"; progress.innerHTML="<div></div>"; host.appendChild(progress);
+  const stepsHost=document.createElement("div"); host.appendChild(stepsHost);
+  let solvedCount=0;
+
+  function updateProgress(){
+    $(".progress>div",host).style.width=`${Math.round(solvedCount/caseData.steps.length*100)}%`;
+  }
+  function unlock(i){
+    const el=stepsHost.children[i];
+    if(el){el.classList.remove("locked"); $$("button,input",el).forEach(x=>x.disabled=false);}
+  }
+  caseData.steps.forEach((step,i)=>{
+    const container=document.createElement("div"); container.className="case-step"+(i? " locked":"");
+    container.innerHTML=`<div class="stepnum">Stap ${i+1} van ${caseData.steps.length}</div>`;
+    stepsHost.appendChild(container);
+    const solve=()=>{
+      if(container.dataset.solved) return;
+      container.dataset.solved="1"; solvedCount++; updateProgress(); unlock(i+1);
+    };
+    if(step.type==="multi"){
+      renderMultiSelectStep(step,container,solve);
+    } else if(step.type==="categorize"){
+      const ex={...step,component:"categorizeMany"};
+      renderCategorize(ex,container);
+      const btn=$(".btn",container);
+      const original=btn.onclick;
+      btn.addEventListener("click",()=>{
+        // Detect complete correctness from status texts
+        const statuses=$$(".cat-status",container).map(x=>x.textContent.trim());
+        if(statuses.length && statuses.every(x=>x==="Correct.")) solve();
+      });
+    } else {
+      const ex={...step,title:step.title};
+      const wrap=document.createElement("div"); wrap.className="exercise";
+      let attempts=0, solved=false;
+      wrap.innerHTML=`<h3>${ex.title}</h3><p>${ex.prompt}</p><div class="options"></div><div class="feedback" aria-live="polite"></div>`;
+      const opts=$(".options",wrap), fb=$(".feedback",wrap);
+      ex.options.forEach(o=>{
+        const b=document.createElement("button"); b.className="opt"; b.type="button"; b.textContent=o.text;
+        b.addEventListener("click",()=>{
+          if(solved) return; attempts++;
+          $$(".opt",opts).forEach(x=>x.classList.remove("selected","incorrect"));
+          b.classList.add("selected");
+          if(o.correct){
+            solved=true;b.classList.add("correct");
+            fb.innerHTML=feedbackBox("good",ex.correctFeedback||"Correct.");
+            solve();
+          } else {
+            b.classList.add("incorrect");
+            fb.innerHTML=feedbackBox("bad",o.feedback||"Deze redenering past niet.")+hintBox(ex.hint||"Redeneer opnieuw vanuit het mechanisme.");
+          }
+        });
+        opts.appendChild(b);
+      });
+      container.appendChild(wrap);
+    }
+    if(i){ $$("button,input",container).forEach(x=>x.disabled=true); }
+  });
+  updateProgress();
+}
+
+function renderMechanismLab(){
+  const host=$("#mechanismLab");
+  const state={volume:0,vaso:0,ino:0,blood:0};
+  host.innerHTML=`<div class="mechanism-lab">
+    <div class="controls">
+      ${[
+        ["volume","Volume / preload"],["vaso","Vaattonus / afterload"],["ino","Contractiliteit / inotropie"],["blood","Hb / zuurstoftransport"]
+      ].map(([id,label])=>`<div class="control"><label for="ctl-${id}">${label}</label>
+        <input id="ctl-${id}" type="range" min="0" max="4" step="1" value="0" aria-describedby="ctl-${id}-desc">
+        <div class="small muted" id="ctl-${id}-desc">geen → hoger</div></div>`).join("")}
+      <button class="btn secondary" type="button" id="resetLab">Reset</button>
+    </div>
+    <div>
+      <h3>Kwalitatieve route</h3>
+      <div class="route" id="routeView"></div>
+      <div class="warning small"><b>Begrenzing:</b> dit onderdeel toont alleen kwalitatieve relaties uit deze les. Het bevat geen dosis-effectrelaties en is geen patiëntmodel.</div>
+    </div>
+  </div>`;
+  const route=$("#routeView",host);
+  function update(){
+    const rows=[];
+    if(!Object.values(state).some(v=>v>0)){
+      rows.push(["Start","Verander één route om het gevolg zichtbaar te maken."]);
+    }
+    if(state.volume>0) rows.push(["Volume / preload","Preload ↑ → cardiale belasting kan ↑ → myocardiale O₂-behoefte kan ↑"]);
+    if(state.vaso>0) rows.push(["Vaattonus / afterload","Perfusiedruk kan ↑; tegelijk afterload ↑ → cardiale belasting kan ↑"]);
+    if(state.ino>0) rows.push(["Contractiliteit","Contractiliteit ↑ → pompkracht ↑; myocardiale O₂-behoefte kan ↑"]);
+    if(state.blood>0) rows.push(["Hb","Hb ↑ → zuurstofdragend aanbod ↑"]);
+    route.innerHTML=rows.map(r=>`<div class="route-row"><div class="route-label">${r[0]}</div><div class="route-box active">${r[1]}</div></div>`).join("");
+  }
+  ["volume","vaso","ino","blood"].forEach(id=>{
+    $("#ctl-"+id,host).addEventListener("input",e=>{state[id]=+e.target.value;update()});
+  });
+  $("#resetLab",host).addEventListener("click",()=>{
+    Object.keys(state).forEach(k=>state[k]=0);
+    ["volume","vaso","ino","blood"].forEach(id=>$("#ctl-"+id,host).value=0);
+    update();
+  });
+  update();
+}
+
+function renderSectionExercises(ids, hostId){
+  const host=$(hostId);
+  ids.map(id=>lessonData.exercises.find(x=>x.id===id)).filter(Boolean).forEach(ex=>{
+    if(ex.component==="categorizeMany") renderCategorize(ex,host); else renderSingleChoice(ex,host);
+  });
+}
+
+function renderFinalCheck(){
+  const host=$("#finalCheck"); let i=0;
+  const progress=document.createElement("div"); progress.className="progress"; progress.innerHTML="<div></div>"; host.appendChild(progress);
+  const slot=document.createElement("div"); host.appendChild(slot);
+  function next(){
+    $(".progress>div",host).style.width=`${Math.round(i/lessonData.finalCheck.length*100)}%`;
+    if(i>=lessonData.finalCheck.length){
+      slot.innerHTML=`<div class="success"><b>Afgerond.</b> Je hebt de volledige redeneerlijn zelfstandig doorlopen: situatie → determinant → balans → monitoring → interventie → effect → herbeoordeling.</div>`;
+      $(".progress>div",host).style.width="100%"; return;
+    }
+    slot.innerHTML="";
+    const q=lessonData.finalCheck[i];
+    const ex={...q,title:`Stap ${i+1} van ${lessonData.finalCheck.length}`};
+    const wrap=document.createElement("div"); wrap.className="exercise";
+    let attempts=0,solved=false;
+    wrap.innerHTML=`<h3>${ex.title}</h3><p>${ex.prompt}</p><div class="options"></div><div class="feedback"></div>`;
+    const opts=$(".options",wrap), fb=$(".feedback",wrap);
+    ex.options.forEach(o=>{
+      const b=document.createElement("button");b.type="button";b.className="opt";b.textContent=o.text;
+      b.addEventListener("click",()=>{
+        if(solved)return;attempts++;
+        $$(".opt",opts).forEach(x=>x.classList.remove("selected","incorrect"));b.classList.add("selected");
+        if(o.correct){
+          solved=true;b.classList.add("correct");
+          fb.innerHTML=feedbackBox("good",ex.correctFeedback)+`<div class="btnrow"><button class="btn good" type="button">Volgende stap</button></div>`;
+          $(".btn",fb).addEventListener("click",()=>{i++;next()});
+        }else{
+          b.classList.add("incorrect");
+          fb.innerHTML=feedbackBox("bad",o.feedback)+hintBox(ex.hint);
+        }
+      }); opts.appendChild(b);
+    });
+    slot.appendChild(wrap);
+  }
+  next();
+}
+
+function renderLimitations(){
+  $("#limitations").innerHTML=lessonData.limitations.map((x,i)=>`<div class="summary-item"><b>${i+1}.</b> ${x}</div>`).join("");
+}
+
+// ---------- Boot ----------
+renderLearningObjectives();
+renderSectionExercises(["cat-balance"],"#categorizeExercise");
+renderSectionExercises(["pred-hr","pred-hb"],"#predictExercises");
+renderCase(lessonData.cases.find(c=>c.id==="case1"),$("#caseOne"));
+renderMechanismLab();
+renderSectionExercises(["hemo-volume","hemo-vaso","hemo-ino","hemo-blood"],"#hemoQuestions");
+renderSectionExercises(["mon-hr","mon-hb"],"#monitoringExercises");
+renderSectionExercises(["mech-vaso","mech-preload","mech-contract","mech-hb"],"#mechanismExercises");
+renderCase(lessonData.cases.find(c=>c.id==="case2"),$("#caseTwo"));
+renderFinalCheck();
+renderLimitations();
+</script>
+</body>
+</html>
